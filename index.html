@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>vishrewebs
+</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/png" href="logo.png">h
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --dusk: #1a2d4a;
+    --vermillion: #c94f4f;
+    --parchment: #f4e8d8;
+    --moss: #7a9b6e;
+    --sakura: #f2c4d4;
+    --ink: #10151f;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ background: var(--ink); }
+
+  body{
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Noto Sans JP', sans-serif;
+    overflow-x: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    * { scroll-behavior: auto !important; }
+  }
+
+  /* ---------- Nav bar ---------- */
+
+  .nav{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.6rem clamp(1.2rem, 4vw, 3rem);
+    background: linear-gradient(to bottom, rgba(10,12,20,0.55), transparent);
+    transition: background 0.4s ease, padding 0.4s ease, backdrop-filter 0.4s ease;
+  }
+
+  .nav.is-scrolled{
+    background: rgba(16,21,31,0.82);
+    backdrop-filter: blur(10px);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    box-shadow: 0 1px 0 rgba(244,232,216,0.08);
+  }
+
+  .nav-mark{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+    color: var(--parchment);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .nav-mark span{
+    color: var(--sakura);
+  }
+
+  .nav-links{
+    display: flex;
+    align-items: center;
+    gap: clamp(1.1rem, 2.6vw, 2.4rem);
+    list-style: none;
+  }
+
+  .nav-links a{
+    color: rgba(244,232,216,0.88);
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    font-weight: 400;
+    position: relative;
+    padding-bottom: 3px;
+  }
+
+  .nav-links a::after{
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    height: 1px;
+    background: var(--sakura);
+    transition: width 0.3s ease;
+  }
+
+  .nav-links a:hover::after{
+    width: 100%;
+  }
+
+  .nav-contact{
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.82rem;
+    color: var(--parchment);
+    border: 1px solid rgba(244,232,216,0.35);
+    padding: 0.5rem 1.05rem;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .nav-contact:hover{
+    border-color: var(--sakura);
+    background: rgba(244,232,216,0.08);
+  }
+
+  .nav-toggle{
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+  }
+
+  .nav-toggle span{
+    width: 22px;
+    height: 1px;
+    background: var(--parchment);
+    display: block;
+  }
+
+  @media (max-width: 780px){
+    .nav-links{
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: min(72vw, 300px);
+      background: rgba(16,21,31,0.97);
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 1.8rem;
+      padding: 2rem;
+      transform: translateX(100%);
+      transition: transform 0.4s ease;
+    }
+    .nav-links.is-open{
+      transform: translateX(0);
+    }
+    .nav-links a{ font-size: 1rem; }
+    .nav-toggle{ display: flex; }
+  }
+
+  /* ---------- Pinned canvas stage ---------- */
+
+  .stage{
+    position: relative;
+    height: 700vh; /* scroll distance that drives the frame scrub */
+  }
+
+  .pin{
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ink);
+  }
+
+  .frame-canvas{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .vignette{
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgba(10,12,20,0.35) 0%, rgba(10,12,20,0) 18%, rgba(10,12,20,0) 72%, rgba(10,12,20,0.55) 100%);
+  }
+
+  /* ---------- Step captions ---------- */
+
+  .caption-layer{
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 9vh;
+  }
+
+  .step-text{
+    position: absolute;
+    text-align: center;
+    max-width: 640px;
+    padding: 0 28px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+
+  .step-text.is-active{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .step-eyebrow{
+    display: block;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 400;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--sakura);
+    margin-bottom: 0.6rem;
+    opacity: 0.85;
+  }
+
+  .step-title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(1.7rem, 4.2vw, 2.9rem);
+    line-height: 1.18;
+    color: var(--parchment);
+    text-shadow: 0 2px 18px rgba(0,0,0,0.45);
+  }
+
+  .step-title em{
+    font-style: italic;
+    color: var(--sakura);
+  }
+
+  /* ---------- Opening title ---------- */
+
+  .opener{
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.8s ease;
+  }
+
+  .opener.faded{ opacity: 0; }
+
+  .opener-kicker{
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    color: var(--sakura);
+    margin-bottom: 1.1rem;
+  }
+
+  .opener-title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(2.6rem, 8vw, 5.4rem);
+    line-height: 1.05;
+    color: var(--parchment);
+    text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+  }
+
+  .opener-sub{
+    margin-top: 1.4rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: rgba(244,232,216,0.78);
+  }
+
+  .scroll-cue{
+    position: absolute;
+    bottom: 2.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(244,232,216,0.75);
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    transition: opacity 0.5s ease;
+  }
+
+  .scroll-cue .line{
+    width: 1px;
+    height: 34px;
+    background: linear-gradient(to bottom, rgba(244,232,216,0.85), rgba(244,232,216,0));
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%,100%{ transform: scaleY(0.6); opacity: 0.5; }
+    50%{ transform: scaleY(1); opacity: 1; }
+  }
+
+  /* ---------- Progress rail ---------- */
+
+  .rail{
+    position: fixed;
+    right: 26px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 140px;
+    background: rgba(244,232,216,0.18);
+    z-index: 20;
+  }
+
+  .rail-fill{
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 0%;
+    background: var(--sakura);
+  }
+
+  /* ---------- Closing panel ---------- */
+
+  .arrival{
+    position: relative;
+    min-height: 100vh;
+    background: var(--dusk);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8vh 6vw;
+    overflow: hidden;
+  }
+
+  .arrival::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(201,79,79,0.22), transparent 55%);
+    pointer-events: none;
+  }
+
+  .arrival-inner{
+    position: relative;
+    max-width: 560px;
+    text-align: center;
+  }
+
+  .arrival-eyebrow{
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    color: var(--sakura);
+    margin-bottom: 1rem;
+  }
+
+  .arrival-title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.16;
+    margin-bottom: 1.4rem;
+  }
+
+  .arrival-body{
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: rgba(244,232,216,0.82);
+    margin-bottom: 2.4rem;
+    font-weight: 300;
+  }
+
+  .arrival-cta{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.8rem;
+    border: 1px solid rgba(244,232,216,0.4);
+    color: var(--parchment);
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    border-radius: 999px;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .arrival-cta:hover{
+    background: rgba(244,232,216,0.08);
+    border-color: var(--sakura);
+  }
+
+  .info-block{
+    background: var(--parchment);
+    color: var(--ink);
+    padding: 9vh 6vw;
+    display: flex;
+    justify-content: center;
+  }
+
+  .info-block.alt{
+    background: #ece0cc;
+  }
+
+  .contact-block{
+    background: var(--vermillion);
+    color: var(--parchment);
+    padding: 9vh 6vw;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .info-inner{
+    max-width: 620px;
+    text-align: center;
+  }
+
+  .info-eyebrow{
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+
+  .info-title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(1.7rem, 3.6vw, 2.5rem);
+    line-height: 1.22;
+    margin-bottom: 1.1rem;
+  }
+
+  .info-body{
+    font-size: 0.92rem;
+    line-height: 1.7;
+    font-weight: 300;
+    opacity: 0.85;
+  }
+
+  footer{
+    text-align:center;
+    padding: 2.2rem 1rem 2.6rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: rgba(244,232,216,0.4);
+    background: var(--dusk);
+  }
+
+  /* ---------- Page transition ---------- */
+
+  .page-transition{
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.65s cubic-bezier(.76,0,.24,1);
+    pointer-events: none;
+  }
+
+  .page-transition::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--sakura);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.65s cubic-bezier(.76,0,.24,1) 0.05s;
+  }
+
+  .page-transition.is-active{
+    transform: scaleY(1);
+    pointer-events: all;
+  }
+
+  .page-transition.is-active::before{
+    transform: scaleX(1);
+  }
+
+  .page-transition-mark{
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.5rem;
+    letter-spacing: 0.06em;
+    color: var(--sakura);
+    opacity: 0;
+    transition: opacity 0.4s ease 0.3s;
+  }
+
+  .page-transition.is-active .page-transition-mark{
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .page-transition{ transition: none; }
+    .page-transition::before{ transition: none; }
+    .page-transition-mark{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-transition" id="pageTransition">
+  <span class="page-transition-mark">vishre</span>
+</div>
+
+<nav class="nav" id="siteNav">
+  <a href="#" class="nav-mark">vishre</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="file:///C:/Users/shrey/Downloads/vishree/projects-site/projects-v6.html">Projects</a></li>
+    <li><a href="file:///C:/Users/shrey/Downloads/vishree/about%20.html">About Us</a></li>
+    <li><a href="file:///C:/Users/shrey/Downloads/vishree/help.html">How We Help You</a></li>
+    <li><a href="#contact" class="nav-contact">91 9686316350.</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="rail"><div class="rail-fill" id="railFill"></div></div>
+
+<section class="stage" id="stage">
+  <div class="pin">
+    <canvas class="frame-canvas" id="frameCanvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="opener" id="opener">
+      <span class="opener-kicker">A SLOW JOURNEY UPHILL</span>
+      <h1 class="opener-title">vishre</h1>
+      <p class="opener-sub">the shrine beneath the mountain</p>
+      <div class="scroll-cue" id="scrollCue">
+        <span>SCROLL</span>
+        <span class="line"></span>
+      </div>
+    </div>
+
+    <div class="caption-layer">
+      <div class="step-text" data-step="1">
+        <span class="step-eyebrow">01 — THE VISTA</span>
+        <p class="step-title">Build your brand.
+Grow online</p>
+      </div>
+      <div class="step-text" data-step="2">
+        <span class="step-eyebrow">02 — SAKURA SEASON</span>
+        <p class="step-title">Your success starts online.</p>
+      </div>
+      <div class="step-text" data-step="3">
+        <span class="step-eyebrow">03 — THE APPROACH</span>
+        <p class="step-title">Designed to impress. Built to grow. <em>four hundred years</em> of visitors before you.</p>
+      </div>
+      <div class="step-text" data-step="4">
+        <span class="step-eyebrow">04 — THE THRESHOLD</span>
+        <p class="step-title">Turn clicks into customers</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="arrival" id="projects">
+  <div class="arrival-inner">
+    <span class="arrival-eyebrow">YOU HAVE ARRIVED</span>
+    <h2 class="arrival-title">vishre web welcomes you to built your first websites with us.</h2>
+    <p class="arrival-body">come lets start a new online jorney together </p>
+    <a href="file:///C:/Users/shrey/Downloads/vishree/projects-site/projects-v6.html" class="arrival-cta">Exploer our work</a>
+  </div>
+</section>
+
+<section class="info-block" id="about">
+  <div class="info-inner">
+    <span class="info-eyebrow">ABOUT US</span>
+    <h2 class="info-title">We are two students dreaming of big dream's with lots of hard work just like you</h2>
+  </div>
+</section>
+
+<section class="info-block alt" id="help">
+  <div class="info-inner">
+    <span class="info-eyebrow">HOW WE HELP YOU</span>
+    <h2 class="info-title">Every big business start's with small ideas </h2>
+    <p class="info-body">“When you support small business, you are supporting a dream.”</p>
+  </div>
+</section>
+
+<section class="contact-block" id="contact">
+  <div class="info-inner">
+    <span class="info-eyebrow">CONTACT NO.</span>
+    <h2 class="info-title">+81 3-4567-8900</h2>
+    <p class="info-body">Lines are open 9:00–17:00 JST, Tuesday through Sunday.</p>
+  </div>
+</section>
+
+<footer>vishre SHRINE &nbsp;·&nbsp; RENDERED FROM A 900-FRAME SEQUENCE</footer>
+
+<script src="manifest.js"></script>
+<script src="scroll.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var overlay = document.getElementById("pageTransition");
+  if (!overlay) return;
+
+  // Any link that navigates to another page — nav items and the
+  // "Explore our work" button — gets the wipe transition. Same-page
+  // anchors like #contact are left as plain scrolls.
+  var links = document.querySelectorAll(
+    '.nav-links a[href$=".html"], .arrival-cta[href$=".html"]'
+  );
+
+  links.forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      var href = link.getAttribute("href");
+      if (!href) return;
+
+      e.preventDefault();
+      overlay.classList.add("is-active");
+
+      window.setTimeout(function () {
+        window.location.href = href;
+      }, 620);
+    });
+  });
+
+  // If a page is reached via back/forward cache, make sure the
+  // overlay doesn't stay stuck covering the screen.
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) overlay.classList.remove("is-active");
+  });
+})();
+</script>
+</body>
+</html>
